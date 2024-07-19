@@ -1,0 +1,10 @@
+ls -lrt
+lspci 
+bash -c "ls ; ls; ls"
+hoge=049d:00:00.0
+hoge=9768:00:00.0
+lspci -vvv -s $hoge
+aaa="N/A"
+aaa=`sudo fdisk -l | tail -n 1`
+echo $aaa
+echo hoge
