@@ -21,19 +21,41 @@ while true; do
 
     # Wait for user input
     while true; do
-        read -p "Enter a number (1-$num_commands) or x to exit: " input
-        if [[ $input =~ ^[0-9]+$ ]] && (( input >= 1 && input <= num_commands )); then
-            command_index=$((input - 1))
-            command=${commands[command_index]}
-            echo "Executing command: $command"
-            # Execute the command corresponding to the entered number
-            eval "$command"
-            break
-        elif [[ $input == "x" || $input == "X" ]]; then
+        read -p "Enter numbers (1-$num_commands) separated by commas or x to exit: " input
+        if [[ $input == "x" || $input == "X" ]]; then
             echo "Exiting"
             exit 0
+        elif [[ $input =~ ^[0-9,]+$ ]]; then
+            IFS=',' read -ra indices <<< "$input"
+            valid_input=true
+            for index in "${indices[@]}"; do
+                if ! (( index >= 1 && index <= num_commands )); then
+                    valid_input=false
+                    break
+                fi
+            done
+
+            if $valid_input; then
+                for index in "${indices[@]}"; do
+                    command_index=$((index - 1))
+                    command=${commands[command_index]}
+                    echo "Executing command[$index]: $command"
+                    # Execute the command corresponding to the entered number
+                    if [[ $command =~ ^[^=]+= ]]; then
+                        # If it's a variable assignment, evaluate it in the current shell
+                        eval "$command"
+                    else
+                        # Otherwise, execute the command in a subshell
+                        bash -c "$command"
+                    fi
+                    echo # Insert an empty line between command results
+                done
+                break
+            else
+                echo "Enter valid numbers separated by commas or x to exit"
+            fi
         else
-            echo "Enter a valid number or x to exit"
+            echo "Enter valid numbers separated by commas or x to exit"
         fi
     done
 done
